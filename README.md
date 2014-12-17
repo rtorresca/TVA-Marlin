@@ -1,5 +1,5 @@
-TVA
-===
+TVA-Marlin
+==========
 
 Test de Velocidad y Aceleración - Speed and acceleration test - 3d printer with firmware Marlin
 ------------------------------------------------------------------------------------------------
@@ -10,15 +10,16 @@ Rafael Torres rtorresca (en) yahoo punto es
 
 Licencia: 
 ---------
-*CC-by-nc-sa*
+Este codigo esta cubierto por la licencia *CC-by-nc-sa*
 
-Agradecimiento: 
+**Agradecimiento**: 
 A todos aquellos que han contribuido con su trabajo a que la comunidad freeX pueda trabajar, aprender y avanzar.
 En este caso, quiero agradecer al autor de QTMarlin (bkubicek/QTMarlin) por su trabajo que me inspiró enormemente para realizar este.
 
 Descripción:
 ------------
 Aplicación para realizar pruebas de pérdida de pasos en los ejes de las impresoras 3D por FFD. No creo que aporte nada respecto al trabajo de bkubicek, salvo la implementación en Python2 y el uso del interfaz gráfico Tk, de modo que su portabilidad no suponga un problema. Debería poder ejecutarse en Windows, Linux y en cualquier S.O. que disponga de un interprete de Python2.
+Solamente esta probado con el firmware Marlin_v1.
 
 Disculpas:
 ----------

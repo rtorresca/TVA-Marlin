@@ -56,4 +56,10 @@ Una vez ya conozcas por donde andan los límites de tu máquina, puedes hacer do
 Cuando tengas los límites de trabajo de velocidad y aceleración definitivos, introducelos en el codigo fuente de Marlin y actualiza el firmware, o introducelos en la EPROM. A tu elección.
 Yo no utilizo los límites indicados por TVA. Los reduzco a un 50% o a un 75% y esos son los límites efectivos que utilizo. Es recomendable hacerlo así y experimentar, acabando de ajustarlos a tu máquina.
 
+**Nota importante**
+
+Cuando acabes de hacer la calibración / pruebas de los ejes, no olvides resetear la tarjeta de control (Arduino Mega) pues TVA ha cambiado los límites de trabajo y puede haber puesto al firmware en algun modo no deseado para imprimir.
+
+Que la prusa os acompañe.
+
 *Rafael Torres*

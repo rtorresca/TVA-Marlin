@@ -26,9 +26,15 @@ Solamente esta probado con el firmware Marlin_v1.
 El trabajo se origino por la necesidad de comprobar los límites de funcionamiento de una impresora 3D y ante los problemas que surgían para compilar QTMarlin, me planteé relizar una aplicación con el mismo objetivo pero que fuese portable y facil de modificar.
 De este modo, la aplicación esta hecha muy deprisa y bastante mal pensada, ausente de toda reflexión y llena de código inutil, mal escrito y seguramente con muchos bugs. Así que me disculpo por ello y or animo a que la mejoreis tanto como podais.
 
-
-Uso
 ---
+# Librerías externas:
+Necesitas tener instalada la librería pyserial
+Si usas Anaconda, puedes escribir en el terminal: 
+````
+conda install pyserial
+````
+
+# Uso
 * Arrancar la aplicación
 Para ello utilizar el interprete de python instalado
 * Selección de los ejes a comprobar: marcar las checkbox correspondientes al eje o ejes que desees comprobar.

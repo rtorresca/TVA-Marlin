@@ -42,10 +42,11 @@ Para ello utilizar el interprete de python instalado
 * cuando tengas seleccionados todos los datos, pincha en el boton START a la izquierda y comenzará la ejecución de todos los test que correspondan.
 
 **_Notas_**
+
 Presta atención al número de pruebas en cada eje y al número de repeticiones. 
 El número total de pruebas que realizará es 
 
-$(testX)*Xnpv*Xnpa*Xnreps + (testY)*Ynpv*Ynpa*Ynreps + (testZ)Znpv*Znpa*Znreps $
+ (testX).Xnpv.Xnpa.Xnreps + (testY).Ynpv.Ynpa.Ynreps + (testZ).Znpv.Znpa.Znreps 
 
 con lo que es recomendable que primero vayas haciendo pruebas con pocos puntos en cada eje y pocas repeticiones. 
 Una vez ya conozcas por donde andan los límites de tu máquina, puedes hacer dos cosas:

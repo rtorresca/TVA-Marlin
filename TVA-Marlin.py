@@ -12,7 +12,6 @@ o compensación será requerido para acceder al código o a los productos
 derivados, debiendo ser el acceso libre y directo.
 """
 
-
 """ Comienzo de la comunicación y configuración con Marlin
 start
 echo: External Reset
@@ -46,7 +45,6 @@ ok
 SEND:G28 X
 """
 
-
 import os
 import time
 import numpy as np
@@ -62,17 +60,18 @@ if True:
     from serial.tools import *
     import serial.tools.list_ports
 
-global finaldecarrera
+# Variables globales --- Algunas se pueden eliminar TODO
 finaldecarrera = False
-global pc
 pc = 0
 straxis = "XYZE"
-defaultPort='COM3'
-defaultbr=250000
+defaultPort = 'COM3'
+defaultbr = 250000
 
 from Tkinter import Tk, Frame, Label, LabelFrame, Button, \
     GROOVE, IntVar, Checkbutton, StringVar, Entry, Canvas, W
+
 root = 0
+
 
 class TestAxis:
     def __init__(self):
@@ -99,9 +98,9 @@ class TestAxis:
 
 class PrinterConnection:
     def __init__(self, port=defaultPort, br=defaultbr, timeout=0):
-
-        self.port    = port
-        self.br      = br
+        self.ser = None
+        self.port = port
+        self.br = br
         self.timeout = timeout
 
         try:
@@ -117,9 +116,9 @@ class PrinterConnection:
         time.sleep(1)
 
     def send(self, msg):
-        r = self.ser.write(msg.upper()+"\n")
+        r = self.ser.write(msg.upper() + "\n")
         self.ser.flush()
-        self.log.write("SEND:"+str(msg)+"\n")
+        self.log.write("SEND:" + str(msg) + "\n")
         self.log.flush()
 
     def sendGCode(self, msg, resp=False):
@@ -141,21 +140,24 @@ class PrinterConnection:
                 l = self.ser.readlines()
                 break
             time.sleep(1)
-            if time.clock()-ct > 60:
+            if time.clock() - ct > 60:
                 l = "SinResultadoenRead"
                 break
 
         self.log.writelines(l)
         self.log.flush()
         return l
+
     def readPosition(self):
         pass
+
     def close(self):
         self.ser.close()
         self.log.close()
 
+
 def CheckRead(l):
-    #print "ATENCION no se comprueba error de endstop!"
+    # print "ATENCION no se comprueba error de endstop!"
     global finaldecarrera
     if type(l) is list:
         for i in range(len(l)):
@@ -166,10 +168,9 @@ def CheckRead(l):
     pass
 
 
-
-#==============================================================================
+# ==============================================================================
 # Prueba un caso concreto
-#==============================================================================
+# ==============================================================================
 class TestCase:
     def __init__(self, axis, dist, vel, accel, xyjerk, zjerk, nreps=2):
         self.axis = axis
@@ -183,7 +184,7 @@ class TestCase:
         # ¿Da tiempo a alcanzar la velocidad máxima o hay que frenar antes
         # de acabar de acelerar?
         modulo = vel / accel
-        distacelerando = accel * modulo**2 / 2
+        distacelerando = accel * modulo ** 2 / 2
         if distacelerando * 2 > dist:
             self.status = False
         else:
@@ -194,19 +195,21 @@ class TestCase:
 
         self.fails = 0
         self.checked = False
+
     def myprint(self):
         # if self.status == False:
-        #     return
+        # return
         print self._msg_print()
 
     def printlog(self):
-        pc.log.writelines(self._msg_print()+"\n")
+        pc.log.writelines(self._msg_print() + "\n")
 
     def _msg_print(self):
-        msg = "TC axis " + straxis[self.axis] + " V: " + str(self.vel) +\
-            " A: " + str(self.accel) + " fails: " + str(self.fails)+"/"+\
-            str(self.nreps) + " Checked: " + str(self.checked)
+        msg = "TC axis " + straxis[self.axis] + " V: " + str(self.vel) + \
+              " A: " + str(self.accel) + " fails: " + str(self.fails) + "/" + \
+              str(self.nreps) + " Checked: " + str(self.checked)
         return msg
+
 
 def ListaTestCases(listaTestAxis):
     tc = []
@@ -238,29 +241,21 @@ def ListaTestCases(listaTestAxis):
                     tc.append(ntc)
     return tc
 
-def HomeAxis(pc, axis):
-    pc.sendGCode("G28 {0} ".format(straxis[axis]))
 
 def enable_endstops_checking():
+    """
+    Habilita la comprobación si se toca algún end-stop durante el movimiento
+    :rtype : none
+    """
     pc.sendGCode("M121")
 
-
-def estadoFinalDeCarrera(pc, axis):
-    print 'escribir probat finales de carrera'
-
-
-def preparaAxis(pc, axis):
-    finaldecarrera = False
-
-    pc.sendGCode("G28 {0} ".format(straxis[axis]))
-
-
-def CheckTestCase(pc, tc):
-    '''Ejecuta un caso de prueba y comprueba resultado
+def checkTestCase(pc, tc):
+    '''
+    Ejecuta un caso y comprueba resultado
     '''
     global finaldecarrera
 
-    if tc.axis == 2: #♥ special actions for z testing
+    if tc.axis == 2:
         testZ = True
     else:
         testZ = False
@@ -273,26 +268,24 @@ def CheckTestCase(pc, tc):
     velretorno = [500, 2]
 
     msg = "TEST: eje:{0} v: {1} a: {2}".format(straxis[tc.axis], tc.vel,
-                                            tc.accel)
+                                               tc.accel)
     print msg
-    pc.log.write(msg+'\n')
-
+    pc.log.write(msg + '\n')
+    enable_endstops_checking()
     # pc.sendGCode("G28 X0 Y0 Z0")
     if testZ:
         pc.sendGCode("G1 Z1 F500")
         pc.sendGCode("G1 X90 Y90 F500")
         # pc.sendGCode("G28 Z0")
     else:
-        pc.sendGCode("G1 Z10 F400")
+        pc.sendGCode("G1 Z10 F2000")
 
     if testZ:
         pc.sendGCode("M201 Z{0}".format(tc.accel))
-        #pc.sendGCode("M202 Z{0}".format(tc.accel))
+        # pc.sendGCode("M202 Z{0}".format(tc.accel))
     else:
         pc.sendGCode("M201 X{0} Y{1}".format(tc.accel, tc.accel))
-        #pc.sendGCode("M202 X{0} Y{1}".format(tc.accel, tc.accel))
-
-
+        # pc.sendGCode("M202 X{0} Y{1}".format(tc.accel, tc.accel))
 
     for i in range(tc.nreps):
         pc.sendGCode("G28 {0} ".format(straxis[tc.axis]))
@@ -302,24 +295,24 @@ def CheckTestCase(pc, tc):
         else:
             pc.sendGCode("M203 X{0} Y{0}".format(tc.vel))
 
-        pc.sendGCode("G1 {0}{1} F{2}".format(straxis[tc.axis], tc.dist,\
-                     tc.vel * 60))
+        pc.sendGCode("G1 {0}{1} F{2}".format(straxis[tc.axis], tc.dist, \
+                                             tc.vel * 60))
         pc.sendGCode("M400")
 
         pc.sendGCode("M203 X{0} Y{0} Z{1}".format(velretorno[0],
-                     velretorno[1])) # velestandar
+                                                  velretorno[1]))  # velestandar
 
-        pc.sendGCode("G1 {0}{2} F{1}".format(straxis[tc.axis], tc.vel*0.5*60,
-                     erroradm))
+        pc.sendGCode("G1 {0}{2} F{1}".format(straxis[tc.axis], tc.vel * 0.5 * 60,
+                                             erroradm))
         pc.sendGCode("M400")
         if finaldecarrera == True:
             msg = "ERROR: TC hit endstop  v:{0} a:{1}\n".format(tc.vel,
-                         tc.accel)
+                                                                tc.accel)
             pc.log.write(msg)
             print msg
             pc.sendGCode('M114')
             finaldecarrera = False
-            tc.fails = tc.fails+1
+            tc.fails = tc.fails + 1
     tc.checked = True
 
 
@@ -329,12 +322,12 @@ def main_prog(ltc):
     pc.open()
 
     # min vel max vel ntest minacc max acc ntest
-    #==============================================================================
+    # ==============================================================================
     #     TablaLimites = [[60, 300, 1, 1000, 9000, 1, 190, 1, True],
     #                     [60, 300, 1, 1000, 9000, 1, 190, 1, True],
     #                     [1,  3,   5,   20, 2000, 1,  20, 1, True]
     #                     ]
-    #==============================================================================
+    # ==============================================================================
 
     # Activa la monitorización de los finales de carrera
     l = pc.sendGCode("M121")
@@ -344,7 +337,7 @@ def main_prog(ltc):
         if lastaxis != i.axis:
             lastaxis = i.axis
             pc.sendGCode("G28")
-        CheckTestCase(pc, i)
+        checkTestCase(pc, i)
 
     for t in ltc:
         t.myprint()
@@ -357,6 +350,7 @@ def main_prog(ltc):
 
     return ltc
 
+
 class GUI:
     def __init__(self):
         self.root = Tk()
@@ -368,15 +362,21 @@ class GUI:
         self.ta2 = TestAxis()
         self.ta3 = TestAxis()
 
-        self.ta1.check =  self.stest1.get()
-        self.ta2.check =  self.stest2.get()
-        self.ta3.check =  self.stest3.get()
-        if self.ta1.check == 1:         self.ta1.check = True
-        else:                           self.ta1.check = False
-        if self.ta2.check == 1:         self.ta2.check = True
-        else:                           self.ta2.check = False
-        if self.ta3.check == 1:         self.ta3.check = True
-        else:                           self.ta3.check = False
+        self.ta1.check = self.stest1.get()
+        self.ta2.check = self.stest2.get()
+        self.ta3.check = self.stest3.get()
+        if self.ta1.check == 1:
+            self.ta1.check = True
+        else:
+            self.ta1.check = False
+        if self.ta2.check == 1:
+            self.ta2.check = True
+        else:
+            self.ta2.check = False
+        if self.ta3.check == 1:
+            self.ta3.check = True
+        else:
+            self.ta3.check = False
 
         self.ta1.axis = 0
         self.ta2.axis = 1
@@ -393,7 +393,6 @@ class GUI:
         self.ta1.vnp = int(self.snvel1.get())
         self.ta2.vnp = int(self.snvel2.get())
         self.ta3.vnp = int(self.snvel3.get())
-
 
         self.ta1.amin = float(self.sacelmin1.get())
         self.ta2.amin = float(self.sacelmin2.get())
@@ -415,14 +414,12 @@ class GUI:
         self.ta2.nrep = int(self.snrep2.get())
         self.ta3.nrep = int(self.snrep3.get())
 
-        self.canvas0scalex = self.canvasHeight*0.8 / self.ta1.vmax
-        self.canvas0scaley = self.canvasHeight*0.8 / self.ta1.amax
-        self.canvas1scalex = self.canvasHeight*0.8 / self.ta2.vmax
-        self.canvas1scaley = self.canvasHeight*0.8 / self.ta2.amax
-        self.canvas2scalex = self.canvasHeight*0.8 / self.ta3.vmax
-        self.canvas2scaley = self.canvasHeight*0.8 / self.ta3.amax
-
-
+        self.canvas0scalex = self.canvasHeight * 0.8 / self.ta1.vmax
+        self.canvas0scaley = self.canvasHeight * 0.8 / self.ta1.amax
+        self.canvas1scalex = self.canvasHeight * 0.8 / self.ta2.vmax
+        self.canvas1scaley = self.canvasHeight * 0.8 / self.ta2.amax
+        self.canvas2scalex = self.canvasHeight * 0.8 / self.ta3.vmax
+        self.canvas2scaley = self.canvasHeight * 0.8 / self.ta3.amax
 
         return [self.ta1, self.ta2, self.ta3]
 
@@ -431,8 +428,8 @@ class GUI:
         self.frameT = Frame(self.root)
 
         self.label1 = Label(self.frameT, text="  TVA Test de Velocidad y Aceleración  ",
-                   bg="Blue", fg='white', font=t24).grid(row=0,
-                    column=1)
+                            bg="Blue", fg='white', font=t24).grid(row=0,
+                                                                  column=1)
 
         self.frameI = Frame(self.frameT)
         self.frameI.grid(row=1, column=0)
@@ -444,17 +441,15 @@ class GUI:
         Label(self.frameI, text='  ').pack()
         Button(self.frameI, command=self.stop, text='STOP!', bg='red', fg='white').pack()
 
-
-
         self.frameC = Frame(self.frameT)
-        #Label(frameC, text='TEST A REALIZAR', bg='dark green', fg='white').pack()
+        # Label(frameC, text='TEST A REALIZAR', bg='dark green', fg='white').pack()
         #frameC.grid(row=1, column=1)
 
 
         self.frameD = LabelFrame(self.frameT, text='Estado',
                                  labelanchor='nw', relief=GROOVE)
         self.frdertop = LabelFrame(self.frameD, text='Estado',
-                                 labelanchor='nw', relief=GROOVE)
+                                   labelanchor='nw', relief=GROOVE)
 
         Label(self.frdertop, text='Velocidad:').grid(row=1, column=0)
         Label(self.frdertop, text='Aceleración:').grid(row=2, column=0)
@@ -464,44 +459,41 @@ class GUI:
 
         self.frdertop.grid(row=1, column=0)
 
-
         self.frameD.grid(row=1, column=2)
 
         # button1 = Button(root, text="Hello, World!", bg="blue").grid(row=1, column=1)
 
-        self.frameTabla= Frame(self. frameC)
+        self.frameTabla = Frame(self.frameC)
         #LabelFrame(frameTabla, text='Definicion de test').pack()
 
-        Label(self.frameTabla,text='Eje').grid(row=1, column=1)
-        Label(self.frameTabla,text='Test').grid(row=1, column=0)
-        Label(self.frameTabla,text='VelMin\nmm/min').grid(row=1, column=2)
-        Label(self.frameTabla,text='VlMax\nmm/min').grid(row=1, column=3)
-        Label(self.frameTabla,text='NtestVel').grid(row=1, column=4)
-        Label(self.frameTabla,text='Acel.Min\nmm/s^2').grid(row=1, column=5)
-        Label(self.frameTabla,text='Acel.Max\nmm/s^2').grid(row=1, column=6)
-        Label(self.frameTabla,text='NtestAccel').grid(row=1, column=7)
-        Label(self.frameTabla,text='Distancia\nmm').grid(row=1, column=8)
-        Label(self.frameTabla,text='NRepet.').grid(row=1, column=9)
+        Label(self.frameTabla, text='Eje').grid(row=1, column=1)
+        Label(self.frameTabla, text='Test').grid(row=1, column=0)
+        Label(self.frameTabla, text='VelMin\nmm/min').grid(row=1, column=2)
+        Label(self.frameTabla, text='VlMax\nmm/min').grid(row=1, column=3)
+        Label(self.frameTabla, text='NtestVel').grid(row=1, column=4)
+        Label(self.frameTabla, text='Acel.Min\nmm/s^2').grid(row=1, column=5)
+        Label(self.frameTabla, text='Acel.Max\nmm/s^2').grid(row=1, column=6)
+        Label(self.frameTabla, text='NtestAccel').grid(row=1, column=7)
+        Label(self.frameTabla, text='Distancia\nmm').grid(row=1, column=8)
+        Label(self.frameTabla, text='NRepet.').grid(row=1, column=9)
 
         Label(self.frameTabla, text='Velocidad').grid(row=0,
-            column=2, columnspan=3)
+                                                      column=2, columnspan=3)
         Label(self.frameTabla, text='Aceleración').grid(row=0,
-            column=5, columnspan=3)
-
+                                                        column=5, columnspan=3)
 
         self.stest1 = IntVar()
         self.stest2 = IntVar()
         self.stest3 = IntVar()
 
-        self.cb1=Checkbutton(self.frameTabla, variable=self.stest1)
+        self.cb1 = Checkbutton(self.frameTabla, variable=self.stest1)
         self.cb1.grid(row=2, column=0)
-        self.cb2=Checkbutton(self.frameTabla, variable=self.stest2)
+        self.cb2 = Checkbutton(self.frameTabla, variable=self.stest2)
         self.cb2.grid(row=3, column=0)
-        self.cb3=Checkbutton(self.frameTabla, variable=self.stest3)
+        self.cb3 = Checkbutton(self.frameTabla, variable=self.stest3)
         self.cb3.grid(row=4, column=0)
         self.cb1.select()
         self.cb2.select()
-
 
         Label(self.frameTabla, text='X').grid(row=2, column=1)
         Label(self.frameTabla, text='Y').grid(row=3, column=1)
@@ -513,34 +505,34 @@ class GUI:
         self.svelmin2 = StringVar(value="40")
         self.svelmin3 = StringVar(value="1")
 
-        self.evmin1=Entry(self.frameTabla, textvariable=self.svelmin1,
-                          width=5).grid(row=2, column=2)
-        self.evmin2=Entry(self.frameTabla, textvariable=self.svelmin2,
-                          width=5).grid(row=3, column=2)
-        self.evmin3=Entry(self.frameTabla, textvariable=self.svelmin3,
-                          width=5).grid(row=4, column=2)
+        self.evmin1 = Entry(self.frameTabla, textvariable=self.svelmin1,
+                            width=5).grid(row=2, column=2)
+        self.evmin2 = Entry(self.frameTabla, textvariable=self.svelmin2,
+                            width=5).grid(row=3, column=2)
+        self.evmin3 = Entry(self.frameTabla, textvariable=self.svelmin3,
+                            width=5).grid(row=4, column=2)
 
         self.svelmax1 = StringVar(value="400")
         self.svelmax2 = StringVar(value="400")
         self.svelmax3 = StringVar(value="10")
 
-        self.evmax1=Entry(self.frameTabla, textvariable=self.svelmax1,
-                          width=5).grid(row=2, column=3)
-        self.evmax2=Entry(self.frameTabla, textvariable=self.svelmax2,
-                          width=5).grid(row=3, column=3)
-        self.evmax3=Entry(self.frameTabla, textvariable=self.svelmax3,
-                          width=5).grid(row=4, column=3)
+        self.evmax1 = Entry(self.frameTabla, textvariable=self.svelmax1,
+                            width=5).grid(row=2, column=3)
+        self.evmax2 = Entry(self.frameTabla, textvariable=self.svelmax2,
+                            width=5).grid(row=3, column=3)
+        self.evmax3 = Entry(self.frameTabla, textvariable=self.svelmax3,
+                            width=5).grid(row=4, column=3)
 
         self.snvel1 = StringVar(value="4")
         self.snvel2 = StringVar(value="4")
         self.snvel3 = StringVar(value="5")
 
-        self.enpv1=Entry(self.frameTabla, textvariable=self.snvel1,
-                         width=2).grid(row=2, column=4)
-        self.enpv2=Entry(self.frameTabla, textvariable=self.snvel2,
-                         width=2).grid(row=3, column=4)
-        self.enpv3=Entry(self.frameTabla, textvariable=self.snvel3,
-                         width=2).grid(row=4, column=4)
+        self.enpv1 = Entry(self.frameTabla, textvariable=self.snvel1,
+                           width=2).grid(row=2, column=4)
+        self.enpv2 = Entry(self.frameTabla, textvariable=self.snvel2,
+                           width=2).grid(row=3, column=4)
+        self.enpv3 = Entry(self.frameTabla, textvariable=self.snvel3,
+                           width=2).grid(row=4, column=4)
 
 
         # --------------------------------------------
@@ -548,37 +540,37 @@ class GUI:
         self.sacelmin2 = StringVar(value="500")
         self.sacelmin3 = StringVar(value="10")
 
-        self.eamin1=Entry(self.frameTabla, textvariable=self.sacelmin1,
-                          width=5).grid(row=2,
-            column=5)
-        self.eamin2=Entry(self.frameTabla, textvariable=self.sacelmin2,
-                          width=5).grid(row=3,
-            column=5)
-        self.eamin3=Entry(self.frameTabla, textvariable=self.sacelmin3,
-                          width=5).grid(row=4,
-            column=5)
+        self.eamin1 = Entry(self.frameTabla, textvariable=self.sacelmin1,
+                            width=5).grid(row=2,
+                                          column=5)
+        self.eamin2 = Entry(self.frameTabla, textvariable=self.sacelmin2,
+                            width=5).grid(row=3,
+                                          column=5)
+        self.eamin3 = Entry(self.frameTabla, textvariable=self.sacelmin3,
+                            width=5).grid(row=4,
+                                          column=5)
 
         self.sacelmax1 = StringVar(value="9000")
         self.sacelmax2 = StringVar(value="9000")
         self.sacelmax3 = StringVar(value="3000")
 
-        self.eamax1=Entry(self.frameTabla, textvariable=self.sacelmax1,
-                          width=5).grid(row=2, column=6)
-        self.eamax2=Entry(self.frameTabla, textvariable=self.sacelmax2,
-                          width=5).grid(row=3, column=6)
-        self.eamax3=Entry(self.frameTabla, textvariable=self.sacelmax3,
-                          width=5).grid(row=4, column=6)
+        self.eamax1 = Entry(self.frameTabla, textvariable=self.sacelmax1,
+                            width=5).grid(row=2, column=6)
+        self.eamax2 = Entry(self.frameTabla, textvariable=self.sacelmax2,
+                            width=5).grid(row=3, column=6)
+        self.eamax3 = Entry(self.frameTabla, textvariable=self.sacelmax3,
+                            width=5).grid(row=4, column=6)
 
         self.snacel1 = StringVar(value="3")
         self.snacel2 = StringVar(value="3")
         self.snacel3 = StringVar(value="5")
 
-        self.enpa1=Entry(self.frameTabla, textvariable=self.snacel1,
-                         width=2).grid(row=2, column=7)
-        self.enpa2=Entry(self.frameTabla, textvariable=self.snacel2,
-                         width=2).grid(row=3, column=7)
-        self.enpa3=Entry(self.frameTabla, textvariable=self.snacel3,
-                         width=2).grid(row=4, column=7)
+        self.enpa1 = Entry(self.frameTabla, textvariable=self.snacel1,
+                           width=2).grid(row=2, column=7)
+        self.enpa2 = Entry(self.frameTabla, textvariable=self.snacel2,
+                           width=2).grid(row=3, column=7)
+        self.enpa3 = Entry(self.frameTabla, textvariable=self.snacel3,
+                           width=2).grid(row=4, column=7)
 
         # ------------------------------------------------
 
@@ -586,12 +578,12 @@ class GUI:
         self.sdist2 = StringVar(value="190")
         self.sdist3 = StringVar(value="30")
 
-        self.ed1=Entry(self.frameTabla, textvariable=self.sdist1,
-                       width=3).grid(row=2, column=8)
-        self.ed2=Entry(self.frameTabla, textvariable=self.sdist2,
-                       width=3).grid(row=3, column=8)
-        self.ed3=Entry(self.frameTabla, textvariable=self.sdist3,
-                       width=3).grid(row=4, column=8)
+        self.ed1 = Entry(self.frameTabla, textvariable=self.sdist1,
+                         width=3).grid(row=2, column=8)
+        self.ed2 = Entry(self.frameTabla, textvariable=self.sdist2,
+                         width=3).grid(row=3, column=8)
+        self.ed3 = Entry(self.frameTabla, textvariable=self.sdist3,
+                         width=3).grid(row=4, column=8)
 
         # ------------------------------------------------
 
@@ -599,52 +591,49 @@ class GUI:
         self.snrep2 = StringVar(value="1")
         self.snrep3 = StringVar(value="1")
 
-        self.enr1=Entry(self.frameTabla, textvariable=self.snrep1,
-                        width=1).grid(row=2, column=9)
-        self.enr2=Entry(self.frameTabla, textvariable=self.snrep2,
-                        width=1).grid(row=3, column=9)
-        self.enr3=Entry(self.frameTabla, textvariable=self.snrep3,
-                        width=1).grid(row=4, column=9)
+        self.enr1 = Entry(self.frameTabla, textvariable=self.snrep1,
+                          width=1).grid(row=2, column=9)
+        self.enr2 = Entry(self.frameTabla, textvariable=self.snrep2,
+                          width=1).grid(row=3, column=9)
+        self.enr3 = Entry(self.frameTabla, textvariable=self.snrep3,
+                          width=1).grid(row=4, column=9)
 
         # ------------------------------------------------
 
-        self.frameTabla.grid(row=2,column=1)
+        self.frameTabla.grid(row=2, column=1)
         self.frameC.grid(row=1, column=1)
 
         self.frameT.pack()
 
-
         self.frderbot = LabelFrame(self.root, text='Test',
-                                 labelanchor='nw', relief=GROOVE)
-        self.canvasHeight = 150*1.2
-        self.canvasWidth  = 150*1.2
-        self.canvasyoff = 150*0.05
-        self.canvasxoff = 150*0.05
-
+                                   labelanchor='nw', relief=GROOVE)
+        self.canvasHeight = 150 * 1.2
+        self.canvasWidth = 150 * 1.2
+        self.canvasyoff = 150 * 0.05
+        self.canvasxoff = 150 * 0.05
 
         self.frcan0 = LabelFrame(self.frderbot, text='Eje X',
-                                 labelanchor='nw',relief=GROOVE)
+                                 labelanchor='nw', relief=GROOVE)
         self.canvas0 = Canvas(self.frcan0, height=self.canvasHeight,
-                             width=self.canvasWidth, relief=GROOVE)
+                              width=self.canvasWidth, relief=GROOVE)
         self.canvas0.pack()
         self.frcan0.grid(row=0, column=0)
 
         self.frcan1 = LabelFrame(self.frderbot, text='Eje Y',
-                                 labelanchor='nw',relief=GROOVE)
+                                 labelanchor='nw', relief=GROOVE)
         self.canvas1 = Canvas(self.frcan1, height=self.canvasHeight,
-                             width=self.canvasWidth)
+                              width=self.canvasWidth)
         self.canvas1.pack()
         self.frcan1.grid(row=0, column=1)
 
         self.frcan2 = LabelFrame(self.frderbot, text='Eje Z',
-                                 labelanchor='nw',relief=GROOVE)
+                                 labelanchor='nw', relief=GROOVE)
         self.canvas2 = Canvas(self.frcan2, height=self.canvasHeight,
-                             width=self.canvasWidth)
+                              width=self.canvasWidth)
         self.canvas2.pack()
         self.frcan2.grid(row=0, column=2)
 
         self.frderbot.pack()
-
 
 
     def start(self):
@@ -672,36 +661,34 @@ class GUI:
         # recorre los casos y dibuja los resultados.
 
 
-        #ltcx = [c for c in ltc if c.axis==0]
+        # ltcx = [c for c in ltc if c.axis==0]
         #ltcy = [c for c in ltc if c.axis==1]
         #ltcz = [c for c in ltc if c.axis==2]
 
-        cx0 = offsetx + 0*self.canvas0scalex
-        cy0 = offsety + 0*self.canvas0scaley
-        cx1 = offsetx + self.ta1.vmax*self.canvas0scalex
-        cy1 = offsety + self.ta1.amax*self.canvas0scaley
+        cx0 = offsetx + 0 * self.canvas0scalex
+        cy0 = offsety + 0 * self.canvas0scaley
+        cx1 = offsetx + self.ta1.vmax * self.canvas0scalex
+        cy1 = offsety + self.ta1.amax * self.canvas0scaley
         t = str(0)
         self.canvas0.create_text(cx0, cy0, text=t)
-        self.canvas0.create_text(cx1, cy0, text=str(self.ta1.vmax),anchor=W)
-        self.canvas0.create_text(cx0, cy1, text=str(self.ta1.amax),anchor=W)
+        self.canvas0.create_text(cx1, cy0, text=str(self.ta1.vmax), anchor=W)
+        self.canvas0.create_text(cx0, cy1, text=str(self.ta1.amax), anchor=W)
 
-        cx0 = offsetx + 0*self.canvas1scalex
-        cy0 = offsety + 0*self.canvas1scaley
-        cx1 = offsetx + self.ta2.vmax*self.canvas1scalex
-        cy1 = offsety + self.ta2.amax*self.canvas1scaley
+        cx0 = offsetx + 0 * self.canvas1scalex
+        cy0 = offsety + 0 * self.canvas1scaley
+        cx1 = offsetx + self.ta2.vmax * self.canvas1scalex
+        cy1 = offsety + self.ta2.amax * self.canvas1scaley
         self.canvas1.create_text(cx0, cy0, text=str(0))
-        self.canvas1.create_text(cx1, cy0, text=str(self.ta2.vmax),anchor=W)
-        self.canvas1.create_text(cx0, cy1, text=str(self.ta2.amax),anchor=W)
+        self.canvas1.create_text(cx1, cy0, text=str(self.ta2.vmax), anchor=W)
+        self.canvas1.create_text(cx0, cy1, text=str(self.ta2.amax), anchor=W)
 
-        cx0 = offsetx + 0*self.canvas2scalex
-        cy0 = offsety + 0*self.canvas2scaley
-        cx1 = offsetx + self.ta3.vmax*self.canvas2scalex
-        cy1 = offsety + self.ta3.amax*self.canvas2scaley
+        cx0 = offsetx + 0 * self.canvas2scalex
+        cy0 = offsety + 0 * self.canvas2scaley
+        cx1 = offsetx + self.ta3.vmax * self.canvas2scalex
+        cy1 = offsety + self.ta3.amax * self.canvas2scaley
         self.canvas2.create_text(cx0, cy0, text=str(0))
-        self.canvas2.create_text(cx1, cy0, text=str(self.ta3.vmax),anchor=W)
-        self.canvas2.create_text(cx0, cy1, text=str(self.ta3.amax),anchor=W)
-
-
+        self.canvas2.create_text(cx1, cy0, text=str(self.ta3.vmax), anchor=W)
+        self.canvas2.create_text(cx0, cy1, text=str(self.ta3.amax), anchor=W)
 
         for tc in ltc:
             if tc.checked or True:
@@ -718,35 +705,31 @@ class GUI:
                     escalay = self.canvas2scaley
                     plotcanvas = self.canvas2
 
-                cx = offsetx + tc.vel*escalax
-                cy = offsety + tc.accel*escalay
+                cx = offsetx + tc.vel * escalax
+                cy = offsety + tc.accel * escalay
 
                 if tc.fails > 0:
-                        rfill='red'
+                    rfill = 'red'
                 else:
-                    rfill='green'
+                    rfill = 'green'
 
                 #cx=cx+*2*self.sizerect
                 #cy=cy+tc.axis*2*self.sizerect
                 plotcanvas.create_rectangle(cx - self.sizerect,
-                                             cy - self.sizerect,
-                                             cx + self.sizerect,
-                                             cy + self.sizerect,
-                                             fill=rfill, outline=rfill)
+                                            cy - self.sizerect,
+                                            cx + self.sizerect,
+                                            cy + self.sizerect,
+                                            fill=rfill, outline=rfill)
 
 
-
-
-###############################################################################
+# ##############################################################################
 if __name__ == "__main__":
 
-    listports =  serial.tools.list_ports.comports()
+    listports = serial.tools.list_ports.comports()
     for port, desc, hwid in sorted(listports):
         print "%s: %s [%s]" % (port, desc, hwid)
 
-
     mgui = GUI()
     mgui.populate_root()
-
     mgui.root.mainloop()
 

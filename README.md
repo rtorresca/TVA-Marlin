@@ -67,9 +67,9 @@ Yo no utilizo los límites indicados por TVA. Los reduzco a un 50% o a un 75% y 
 Cuando acabes de hacer la calibración / pruebas de los ejes, no olvides resetear la tarjeta de control (Arduino Mega) pues TVA ha cambiado los límites de trabajo y puede haber puesto al firmware en algun modo no deseado para imprimir.
 
 # TODO
-- [ ] Ejecutable .exe para windows. En linux no debería de haber problema. 
-- [ ] Lista para seleccionar el puerto serie donde esta la impresora
-- [ ] Incorporar la lista al interfaz gráfico con una ListBox
+- [ ] Ejecutable .exe para windows. En linux no debería de haber problema. Retrasado hasta encontrar una forma de hacerlo.
+- [X] Lista para seleccionar el puerto serie donde esta la impresora
+- [X] Incorporar la lista al interfaz gráfico con una ListBox
 - [ ] Autoconfigurar el error admisible
 - [ ] Completar el gui con la información puntual del test que se está realizando en cada momento
 - [ ] Emitir un informe con las recomendaciones tras los resultados obtenidos

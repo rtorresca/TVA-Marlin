@@ -101,7 +101,7 @@ class TestAxis:
 #######
 
 class PrinterConnection:
-    def __init__(self, port=defaultPort, br=defaultbr, timeout=0):
+    def __init__(self, port="COM1", br=250000, timeout=0):
 
         self.port = port
         self.br = br
@@ -124,15 +124,22 @@ class PrinterConnection:
                 print "puerto posible encontrado: %s: %s [%s]" % (port, desc, hwid)
                 self.lpftdi.append([port, desc])
 
-    def open(self, port=defaultPort, br=defaultbr, timeout=0):
+    def open(self, port="COM1", br=250000, timeout=0):
         if self.conectada is True:
             self.ser.close()
             self.conectada = False
         try:
-            self.ser = serial.Serial(port, self.br, timeout=self.timeout)
+            self.ser = serial.Serial(port, br, timeout=self.timeout)
             self.conectada = True
+            self.port = port
+            self.br = br
+            self.timeout = timeout
         except IOError:
-            self.ser.close()
+            print "IOError: Error al abrirlo. {0}".format(port)
+            pass
+        except ValueError:
+            print "ValueError: Puerto inválido. Error al abrirlo. {0}".format(port)
+
         time.sleep(0.2)
 
     def send(self, msg):
@@ -279,7 +286,7 @@ def CheckTestCase(pc, tc):
     '''
     global finaldecarrera
 
-    if tc.axis == 2:  #♥ special actions for z testing
+    if tc.axis == 2:
         testZ = True
     else:
         testZ = False
@@ -462,11 +469,13 @@ class GUI:
         # abre la conexion con la impresora
         global pc
 
-        sel = self.listpuertos.entry.get()
-        print "selección: ", sel
-        puerto = sel
+        selpt = self.listpuertos.entry.get()
+        selbr = self.listbr.entry.get()
+        print "selección: ", selpt, selbr
+        puerto = selpt
+        bitrate = selbr
 
-        pc.open(port=puerto)
+        pc.open(port=puerto, br=bitrate)
 
         # self.startButton['state'] = 'enable'
 
@@ -504,27 +513,54 @@ class GUI:
         Label(self.frameI, text='OPERACIONES', bg='dark green', fg='white').pack()
         Label(self.frameI, text='  ').pack()
         Label(self.frameI, text='  ').pack()
-
+        self.frameIC = Frame(self.frameI)
+        # comboBox puerto #########################
         self.portsv = StringVar()
-        self.listpuertos = ComboBox(self.frameI, variable=self.portsv)
+        self.listpuertos = ComboBox(self.frameIC, variable=self.portsv, editable=True,
+                                    label="Puerto", listwidth=20)
+        # self.listpuertos['listwidth'] = 20
+        self.listpuertos.entry['width'] = 10
+
         for i in pc.lpftdi:
             print "-->", i[0]
             self.listpuertos.insert(END, i[0])
 
+        if len(pc.lpftdi) > 0:
+            self.listpuertos.set_silent(pc.lpftdi[0][0])
         self.listpuertos.pack()
-        self.listpuertos.set_silent(pc.lpftdi[0][0])
 
-        Button(self.frameI, command=self.conectPrinter, text='Conecta', bg='black', fg='white').pack()
-        Label(self.frameI, text='  ').pack()
-        Button(self.frameI, command=self.disconectPrinter, text='Desconecta', bg='black', fg='white').pack()
+        # fin comboBox ###############################
+        # comboBox br  #########################
+        self.brsv = StringVar()
+        self.listbr = ComboBox(self.frameIC, variable=self.brsv, editable=True,
+                                    label="BitRate")
+        self.listbr.entry['width'] = 10
+        # self.listbr['listwidth'] = 20
+        self.listabr = ["250000", "128000", "9600", "1200"]
+        for i in self.listabr:
+            print "-->", i
+            self.listbr.insert(END, i)
+        self.listbr.set_silent(self.listabr[0])
+        self.listbr.pack()
+        # fin comboBox ###############################
+
+        Button(self.frameIC, command=self.conectPrinter, text='Conecta', bg='black', fg='white').pack()
+        # Label(self.frameIC, text='  ').pack()
+        Button(self.frameIC, command=self.disconectPrinter, text='Desconecta', bg='black', fg='white').pack()
+        self.frameIC.pack()
 
         Label(self.frameI, text='  ').pack()
-        Label(self.frameI, text='  ').pack()
+        # Label(self.frameI, text='  ').pack()
 
-        self.startButton = Button(self.frameI, command=self.start, text='START!', bg='green', fg='white').pack()
-        Label(self.frameI, text='  ').pack()
-        #self.startButton['state'] = 'disable'
-        Button(self.frameI, command=self.stop, text='EXIT!', bg='red', fg='white').pack()
+        self.frameI2 = Frame(self.frameI)
+
+        self.startButton = Button(self.frameI2, command=self.start, text='START!', bg='green', fg='white').pack()
+        # Label(self.frameI2, text='  ').pack()
+        # self.startButton['state'] = 'disable'
+        Button(self.frameI2, command=self.stop, text='EXIT!', bg='red', fg='white').pack()
+
+        self.frameI2.pack()
+
 
         self.frameC = Frame(self.frameT)
         #Label(frameC, text='TEST A REALIZAR', bg='dark green', fg='white').pack()

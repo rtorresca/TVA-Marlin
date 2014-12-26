@@ -70,10 +70,11 @@ pc = None
 straxis = "XYZE"
 defaultPort = 'COM1'
 defaultbr = 250000
+origen = [] # coordenada sin que salten los finales de carrera
 
 # from Tkinter import *
 from Tix import *
-
+hits = None
 root = 0
 
 
@@ -153,10 +154,13 @@ class PrinterConnection:
 
     def sendGCode(self, msg, resp=False):
         findecarrera = False
+        if self.conectada == False:
+            print "Impresora no conectada"
+            return
         self.send(msg)
         time.sleep(0.4)
         l = self.read()
-        CheckRead(l)
+        self.CheckRead(l)
         if resp:  #si resp es True, devuelve la lectura realizada
             return l
 
@@ -168,10 +172,10 @@ class PrinterConnection:
         while True:
             niw = self.ser.inWaiting()
             if niw > 0:
-                time.sleep(0.5)
+                time.sleep(0.2)
                 l = self.ser.readlines()
                 break
-            time.sleep(1)
+            time.sleep(0.2)
             if time.clock() - ct > 60:
                 l = "SinResultadoenRead"
                 break
@@ -187,20 +191,22 @@ class PrinterConnection:
         if self.conectada == True:
             self.ser.close()
 
+    def CheckRead(self, r):
+        global finaldecarrera
+        if type(r) is list:
+            for i in range(len(r)):
+                if 'endstops hit' in r[i]:
+                    finaldecarrera = True
+                    break
+            pass
+        else:
+            if 'endstops hit' in r:
+                finaldecarrera = True
+
+
 
 pc = PrinterConnection()
 pc.list_ports()
-
-
-def CheckRead(l):
-    global finaldecarrera
-    if type(l) is list:
-        for i in range(len(l)):
-            if 'endstops hit' in l[i]:
-                finaldecarrera = True
-                break
-        pass
-    pass
 
 
 #==============================================================================
@@ -291,10 +297,7 @@ def CheckTestCase(pc, tc):
     else:
         testZ = False
 
-    if testZ:
-        erroradm = 0.05
-    else:
-        erroradm = 0.05
+    erroradm = origen[tc.axis]
 
     velretorno = [500, 2]
 
@@ -333,33 +336,156 @@ def CheckTestCase(pc, tc):
         else:
             pc.sendGCode("M203 X{0} Y{0}".format(tc.vel))
 
-        pc.sendGCode("G1 {0}{1} F{2}".format(straxis[tc.axis], tc.dist, \
-                                             tc.vel * 60))
+        pc.sendGCode("G1 {0}{1} F{2}".format(straxis[tc.axis], round(tc.dist, 3), \
+                                             round(tc.vel * 60, 1)))
         pc.sendGCode("M400")
 
         pc.sendGCode("M203 X{0} Y{0} Z{1}".format(velretorno[0],
                                                   velretorno[1]))  # velestandar
 
-        pc.sendGCode("G1 {0}{2} F{1}".format(straxis[tc.axis], tc.vel * 0.5 * 60,
+        pc.sendGCode("G1 {0}{2} F{1}".format(straxis[tc.axis], round(tc.vel * 0.5 * 60, 1),
                                              erroradm))
         pc.sendGCode("M400")
 
-        time.sleep(1)
+        time.sleep(0.1)
 
-        if finaldecarrera == True:
+        cfc = check_fin_de_carrera()
+        if straxis[tc.axis] in cfc:
             msg = "ERROR: TC hit endstop  v:{0} a:{1}\n".format(tc.vel,
                                                                 tc.accel)
             pc.log.write(msg)
             print msg
             pc.sendGCode('M114')
-            finaldecarrera = False
+            # finaldecarrera = False
             tc.fails = tc.fails + 1
     tc.checked = True
+
+def check_fin_de_carrera():
+
+    resp = pc.sendGCode('M119', resp=True)
+    # ['Reporting endstop status\n', 'x_min: TRIGGERED\n', 'y_min: open\n', 'z_min: open\n', 'ok\n']
+    cfc = []
+    for i in [1,2,3]:
+        if "TRIG" in resp[i]:
+            cfc.append(straxis[i-1])
+    return cfc
+
+def calcula_limites_ejes():
+    global pc
+    global finaldecarrera
+    global hits
+    #desplazarse en cada eje al home
+    resp = pc.sendGCode("G28")
+    # alejarse hasta no hacer contacto 1mm
+    pc.sendGCode("G1 X1 Y1 Z1 F200")
+    # moverse hasta hacer contacto
+    hits = [[0,0,0],
+            [0,0,0],
+            [0,0,0]]
+    finprueba = False
+    for i in [0,1,2]:
+        resp = pc.sendGCode("G28 {0}".format(straxis[i]))
+        pc.sendGCode("G1 X1 Y1 Z1 F200")
+        resp = pc.sendGCode("G1 {0}1.000 F200".format(straxis[i]))
+        finprueba = False
+        for j in range(0, 11):
+            hits[i][0] = 0
+            finaldecarrera = False
+            resp = pc.sendGCode("G1 {0}{1} F200".format(straxis[i], round( 1.0-0.1*j,3)))
+            pc.sendGCode('M400')
+            cfc = check_fin_de_carrera()
+            if straxis[i] in cfc:
+                hits[i][0] = j-1
+                # resp = pc.sendGCode("M114", resp=True)
+                # print resp
+                # sep = re.split(r'[XYZE]\:\s*[-+]?(\d*(\.\d*)?)', resp[0])
+                # print sep
+
+                resp = pc.sendGCode("G28 {0}".format(straxis[i]))
+                pc.sendGCode("G1 X1 Y1 Z1 F200")
+                pc.sendGCode("M400")
+                # resp = pc.sendGCode("G1 {0}1.000 F200".format(straxis[i]))
+
+                for k in range(0, 11):
+                    hits[i][1] = 0
+                    # finaldecarrera = False
+                    resp = pc.sendGCode("G1 {0}{1} F200".format(straxis[i],
+                                                                round(1.0-0.1*(j-1) - 0.01*k,3)))
+                    cfc = check_fin_de_carrera()
+                    if straxis[i] in cfc:
+                        hits[i][1] = k-1
+                        # resp = pc.sendGCode("M114", resp=True)
+                        # print resp
+                        # sep = re.split(r'[XYZE]\:\s*[-+]?(\d*(\.\d*)?)', resp[0])
+                        # print sep
+
+                        resp = pc.sendGCode("G28 {0}".format(straxis[i]))
+                        pc.sendGCode("G1 X1 Y1 Z1 F100")
+                        # resp = pc.sendGCode("G1 {0}1.000 F100".format(straxis[i]))
+
+                        for l in range(0, 11):
+                            hits[i][2] = 0
+                            # finaldecarrera = False
+                            resp = pc.sendGCode("G1 {0}{1} F100".format(straxis[i],
+                                                                        round(1-0.1*(j-1)
+                                                                        - 0.01*(k-1)
+                                                                        -0.001*l,3)))
+                            cfc = check_fin_de_carrera()
+                            if straxis[i] in cfc:
+                                hits[i][2] = l-1
+                                # resp = pc.sendGCode("M114", resp=True)
+                                # print resp
+                                #sep = re.split(r'[XYZE]\:\s*[-+]?(\d*(\.\d*)?)', resp[0])
+                                #print sep
+                                finprueba = True
+                                break
+                    if finprueba is True: break
+            if finprueba is True: break
+    # print hits
+
+    global origen
+    origen = []
+    redondeo = 100.0 # redondeo al segundo decimal
+    for a in [0,1,2]:
+        origen.append(1.0-hits[a][0]*0.1-hits[a][1]*0.01-hits[a][2]*0.001)
+        origen[a] = round(origen[a],3)
+    # print origen
+
+    # ultima comprobación. Comprobar donde está el limite cuando el eje se está moviendo a una velocidad moderada de retorno
+    #desplazarse en cada eje al home
+
+    # alejarse hasta no hacer contacto 1mm
+    for a in [0,1,2]:
+        resp = pc.sendGCode("G28")
+        testpass = 0
+        if a==2:
+            vel = 180
+        else:
+            vel=2000
+        while True:
+            resp = pc.sendGCode("G28 {0}".format(straxis[a]))
+            pc.sendGCode("G1 X10 Y10 Z10 F100")
+            resp = pc.sendGCode('M400')
+            resp = pc.sendGCode('G1 {0}{1} F{2}'.format(straxis[a], origen[a], vel))
+            resp = pc.sendGCode('M400')
+            cfc = check_fin_de_carrera()
+            if straxis[a] in cfc:
+                origen[a] = origen[a] + 0.005
+                testpass = 0
+                # print 'Origen ',straxis[a],":" , origen[a]
+            else:
+                testpass = testpass+1
+                if testpass >= 3:
+                    break
+            time.sleep(0.1)
+        # print origen
+        origen[a] = np.ceil(origen[a]*redondeo)/redondeo
+        # print origen
 
 
 def main_prog(ltc):
     global pc
-    pc.list_ports()
+    # pc.list_ports()
 
     # min vel max vel ntest minacc max acc ntest
     #==============================================================================
@@ -370,8 +496,11 @@ def main_prog(ltc):
     #==============================================================================
 
     # Activa la monitorización de los finales de carrera
-    enable_endstops_checking()
+    # enable_endstops_checking()
     pc.sendGCode("M121")
+
+    ## Calcula hasta donde se puede mover en cada eje
+    calcula_limites_ejes()
 
     lastaxis = -1
     for i in ltc:
@@ -385,9 +514,9 @@ def main_prog(ltc):
         t.printlog()
 
     # Disable all stepper motors
-    l = pc.sendGCode("M84")
+    pc.sendGCode("M84")
 
-    pc.close()
+    # pc.close()
 
     return ltc
 
@@ -758,6 +887,8 @@ class GUI:
 
 
     def start(self):
+        if pc.conectada == False:
+            return
         lta = self.leetabla()
         ltc = ListaTestCases(lta)
         print 'Empieza el test'
@@ -844,7 +975,8 @@ class GUI:
 
 
 ###############################################################################
-if __name__ == "__main__":
+if __name__ == '__main__':
+
     mgui = GUI()
     mgui.populate_root()
 

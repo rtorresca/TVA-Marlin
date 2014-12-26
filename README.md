@@ -70,7 +70,7 @@ Cuando acabes de hacer la calibración / pruebas de los ejes, no olvides resetea
 - [ ] Ejecutable .exe para windows. En linux no debería de haber problema. Retrasado hasta encontrar una forma de hacerlo.
 - [X] Lista para seleccionar el puerto serie donde esta la impresora
 - [X] Incorporar la lista al interfaz gráfico con una ListBox
-- [ ] Autoconfigurar el error admisible
+- [X] Autoconfigurar el error admisible
 - [ ] Completar el gui con la información puntual del test que se está realizando en cada momento
 - [ ] Emitir un informe con las recomendaciones tras los resultados obtenidos
 

@@ -50,6 +50,10 @@ ok
 SEND:G28 X
 """
 
+Ver_major = 1
+Ver_minor = 0
+Ver_rel = 0
+
 import os
 import time
 import numpy as np
@@ -253,6 +257,7 @@ class TestCase:
 
 
 def ListaTestCases(listaTestAxis):
+
     tc = []
 
     for ta in listaTestAxis:
@@ -266,17 +271,23 @@ def ListaTestCases(listaTestAxis):
         vmin = ta.vmin
         vmax = ta.vmax
         nsteps = ta.vnp
+        nsteps = int(nsteps)
         if nsteps < 1:
             nsteps = 1
-        nsteps = int(nsteps)
-        for v in np.linspace(vmin, vmax, nsteps):
+            vpasos = [vmin]
+        else:
+            vpasos = np.linspace(vmin, vmax, nsteps)
+        for v in vpasos:
             amin = ta.amin
             amax = ta.amax
             asteps = ta.anp
+            asteps = int(asteps)
             if asteps < 1:
                 asteps = 1
-            asteps = int(asteps)
-            for a in np.linspace(amin, amax, asteps):
+                apasos = [amin]
+            else:
+                apasos = np.linspace(amin, amax, asteps)
+            for a in apasos:
                 ntc = TestCase(ax, dist, float(v), float(a), 50.0, 30.0, nr)
                 if ntc.status == True:
                     tc.append(ntc)
@@ -631,14 +642,18 @@ class GUI:
     def populate_root(self):
         global pc
         t24 = tkFont.Font(family='Times', size='24', weight='bold')
+        t12 = tkFont.Font(family='Times', size='12', weight='normal')
         self.frameT = Frame(self.root)
 
         self.label1 = Label(self.frameT, text="  TVA Test de Velocidad y Aceleración  ",
                             bg="Blue", fg='white', font=t24).grid(row=0,
                                                                   column=1)
+        self.label1b = Label(self.frameT, text="  Ver: {0}.{1}.{2}  by R. Torres".format(Ver_major, Ver_minor, Ver_rel),
+                            bg="Blue", fg='white', font=t12).grid(row=1,
+                                                                  column=1)
 
         self.frameI = Frame(self.frameT)
-        self.frameI.grid(row=1, column=0)
+        self.frameI.grid(row=10, column=0)
         Label(self.frameI, text='OPERACIONES', bg='dark green', fg='white').pack()
         Label(self.frameI, text='  ').pack()
         Label(self.frameI, text='  ').pack()
@@ -707,9 +722,9 @@ class GUI:
         Label(self.frdertop, text='OK?').grid(row=4, column=0)
         Label(self.frdertop, text='Velocidad').grid(row=5, column=0)
 
-        self.frdertop.grid(row=1, column=0)
+        self.frdertop.grid(row=10, column=0)
 
-        self.frameD.grid(row=1, column=2)
+        self.frameD.grid(row=10, column=2)
 
         # button1 = Button(root, text="Hello, World!", bg="blue").grid(row=1, column=1)
 
@@ -851,7 +866,7 @@ class GUI:
         # ------------------------------------------------
 
         self.frameTabla.grid(row=2, column=1)
-        self.frameC.grid(row=1, column=1)
+        self.frameC.grid(row=10, column=1)
 
         self.frameT.pack()
 

@@ -1,4 +1,6 @@
 *.pyc
 .idea
 .idea/
+.git
+.git/
 Calibration.txt

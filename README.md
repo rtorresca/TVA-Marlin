@@ -8,7 +8,7 @@
 
 Rafael Torres rtorresca (en) yahoo punto es
 
-# Licencia: 
+## Licencia: 
 
 Este codigo esta cubierto por la licencia *CC-by-nc-sa*
 
@@ -16,7 +16,7 @@ Este codigo esta cubierto por la licencia *CC-by-nc-sa*
 A todos aquellos que han contribuido con su trabajo a que la comunidad freeX pueda trabajar, aprender y avanzar.
 En este caso, quiero agradecer al autor de QTMarlin (bkubicek/QTMarlin) por su trabajo que me inspiró enormemente para realizar este.
 
-# Descripción:
+## Descripción:
 
 Aplicación para realizar pruebas de pérdida de pasos en los ejes de las impresoras 3D por FFD. No creo que aporte nada respecto al trabajo de bkubicek, salvo la implementación en Python2 y el uso del interfaz gráfico Tk, de modo que su portabilidad no suponga un problema. Debería poder ejecutarse en Windows, Linux y en cualquier S.O. que disponga de un interprete de Python2.
 Solamente esta probado con el firmware Marlin_v1.
@@ -27,14 +27,28 @@ El trabajo se origino por la necesidad de comprobar los límites de funcionamien
 De este modo, la aplicación esta hecha muy deprisa y bastante mal pensada, ausente de toda reflexión y llena de código inutil, mal escrito y seguramente con muchos bugs. Así que me disculpo por ello y or animo a que la mejoreis tanto como podais.
 
 ---
-# Librerías externas:
-Necesitas tener instalada la librería pyserial
+## Instalación
+
+### Para ejecutar la versión Python
+Tener instalado un interprete de python 2.7
+ejecutar 
+
+	python2 TVAMarlin.py
+
+_et voilà!_ ya debería aparecer la ventana del interfaz de la aplicación.
+
+### Para la versión compilada
+Por el momento no hay versión compilada por lo que la única manera es siguiendo las instrucciones del apartado anterior.
+
+
+### Librerías externas:
+Necesitas tener instalada la librería pyserial y tix
 Si usas Anaconda, puedes escribir en el terminal: 
-````shell
-conda install pyserial
+````
+	conda install pyserial
 ````
 
-# Uso
+## Uso
 * Arrancar la aplicación
 Para ello utilizar el interprete de python instalado
 * Selección de los ejes a comprobar: marcar las checkbox correspondientes al eje o ejes que desees comprobar.
@@ -66,7 +80,7 @@ Yo no utilizo los límites indicados por TVA. Los reduzco a un 50% o a un 75% y 
 
 Cuando acabes de hacer la calibración / pruebas de los ejes, no olvides resetear la tarjeta de control (Arduino Mega) pues TVA ha cambiado los límites de trabajo y puede haber puesto al firmware en algun modo no deseado para imprimir.
 
-# TODO
+## TO-DO
 - [ ] Ejecutable .exe para windows. En linux no debería de haber problema. Retrasado hasta encontrar una forma de hacerlo.
 - [X] Lista para seleccionar el puerto serie donde esta la impresora
 - [X] Incorporar la lista al interfaz gráfico con una ListBox

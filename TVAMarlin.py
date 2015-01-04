@@ -51,7 +51,7 @@ SEND:G28 X
 """
 
 Ver_major = 1
-Ver_minor = 0
+Ver_minor = 1
 Ver_rel = 0
 
 import os

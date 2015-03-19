@@ -51,8 +51,8 @@ SEND:G28 X
 """
 
 Ver_major = 1
-Ver_minor = 1
-Ver_rel = 0
+Ver_minor = 2
+Ver_rel = 1
 
 import os
 import time
@@ -310,7 +310,7 @@ def CheckTestCase(pc, tc):
 
     erroradm = origen[tc.axis]
 
-    velretorno = [500, 2]
+    velretorno = [300, 2]
 
     msg = "TEST: eje:{0} v: {1} a: {2}".format(straxis[tc.axis], tc.vel,
                                                tc.accel)
@@ -351,14 +351,23 @@ def CheckTestCase(pc, tc):
                                              round(tc.vel * 60, 1)))
         pc.sendGCode("M400")
 
+        ### RETORNO
         pc.sendGCode("M203 X{0} Y{0} Z{1}".format(velretorno[0],
                                                   velretorno[1]))  # velestandar
-
-        pc.sendGCode("G1 {0}{2} F{1}".format(straxis[tc.axis], round(tc.vel * 0.5 * 60, 1),
-                                             erroradm))
+        # Aceleración de retorno
+        if testZ:
+            pc.sendGCode("M201 Z{0}".format(100))
+        else:
+            pc.sendGCode("M201 X{0} Y{1}".format(100.0, 100.0))
+        if testZ:
+            pc.sendGCode("G1 {0}{2} F{1}".format(straxis[tc.axis], round(velretorno[1]*60, 1),
+                                                 erroradm))
+        else:
+            pc.sendGCode("G1 {0}{2} F{1}".format(straxis[tc.axis], round(velretorno[0]*60, 1),
+                                                 erroradm))
         pc.sendGCode("M400")
 
-        time.sleep(0.1)
+        time.sleep(0.01)
 
         cfc = check_fin_de_carrera()
         if straxis[tc.axis] in cfc:
@@ -478,7 +487,7 @@ def calcula_limites_ejes(lta):
         # resp = pc.sendGCode("G28")
         testpass = 0
         if a==2:
-            vel = 180
+            vel = 2*60
         else:
             vel=60*60
         while True:
@@ -496,7 +505,7 @@ def calcula_limites_ejes(lta):
                 testpass = testpass+1
                 if testpass >= 3:
                     break
-            time.sleep(0.1)
+            time.sleep(0.01)
         # print origen
         origen[a] = np.ceil(origen[a]/redondeo)*redondeo
         # print origen

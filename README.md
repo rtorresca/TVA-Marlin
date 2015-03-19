@@ -87,6 +87,7 @@ Cuando acabes de hacer la calibración / pruebas de los ejes, no olvides resetea
 - [X] Autoconfigurar el error admisible
 - [ ] Completar el gui con la información puntual del test que se está realizando en cada momento
 - [ ] Emitir un informe con las recomendaciones tras los resultados obtenidos
+- [ ] Eliminar el uso de la librería tix y usar solamente tkinter para ser más compatible
 
 
 Que la prusa te acompañe :sunglasses:

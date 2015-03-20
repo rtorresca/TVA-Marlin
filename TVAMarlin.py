@@ -51,7 +51,7 @@ SEND:G28 X
 """
 
 Ver_major = 1
-Ver_minor = 2
+Ver_minor = 4
 Ver_rel = 1
 
 import os
@@ -69,7 +69,7 @@ if True:
     from serial.tools import *
     import serial.tools.list_ports
 
-finaldecarrera = False
+# finaldecarrera = False
 pc = None
 straxis = "XYZE"
 defaultPort = 'COM1'
@@ -162,10 +162,10 @@ class PrinterConnection:
             print "Impresora no conectada"
             return
         self.send(msg)
-        time.sleep(0.4)
+        time.sleep(0.1)
         l = self.read()
-        self.CheckRead(l)
-        if resp:  #si resp es True, devuelve la lectura realizada
+        # self.CheckRead(l)
+        if resp:  # si resp es True, devuelve la lectura realizada
             return l
 
     def read(self):
@@ -176,10 +176,10 @@ class PrinterConnection:
         while True:
             niw = self.ser.inWaiting()
             if niw > 0:
-                time.sleep(0.2)
+                time.sleep(0.1)
                 l = self.ser.readlines()
                 break
-            time.sleep(0.2)
+            time.sleep(0.1)
             if time.clock() - ct > 60:
                 l = "SinResultadoenRead"
                 break
@@ -195,17 +195,17 @@ class PrinterConnection:
         if self.conectada == True:
             self.ser.close()
 
-    def CheckRead(self, r):
-        global finaldecarrera
-        if type(r) is list:
-            for i in range(len(r)):
-                if 'endstops hit' in r[i]:
-                    finaldecarrera = True
-                    break
-            pass
-        else:
-            if 'endstops hit' in r:
-                finaldecarrera = True
+    # def CheckRead(self, r):
+    #     global finaldecarrera
+    #     if type(r) is list:
+    #         for i in range(len(r)):
+    #             if 'endstops hit' in r[i]:
+    #                 finaldecarrera = True
+    #                 break
+    #         pass
+    #     else:
+    #         if 'endstops hit' in r:
+    #             finaldecarrera = True
 
 
 
@@ -324,6 +324,7 @@ def CheckTestCase(pc, tc):
     else:
         pc.sendGCode("G1 Z10 F400")
 
+    # Aceleración a probar
     if testZ:
         pc.sendGCode("M201 Z{0}".format(tc.accel))
         #pc.sendGCode("M202 Z{0}".format(tc.accel))
@@ -346,7 +347,16 @@ def CheckTestCase(pc, tc):
             pc.sendGCode("M203 X500 Y500 Z{0}".format(tc.vel))
         else:
             pc.sendGCode("M203 X{0} Y{0}".format(tc.vel))
+        # Aceleración a probar
+        if testZ:
+            pc.sendGCode("M201 Z{0}".format(tc.accel))
+            #pc.sendGCode("M202 Z{0}".format(tc.accel))
+        else:
+            pc.sendGCode("M201 X{0} Y{1}".format(tc.accel, tc.accel))
+            #pc.sendGCode("M202 X{0} Y{1}".format(tc.accel, tc.accel))
 
+
+        pc.sendGCode("M400")
         pc.sendGCode("G1 {0}{1} F{2}".format(straxis[tc.axis], round(tc.dist, 3), \
                                              round(tc.vel * 60, 1)))
         pc.sendGCode("M400")
@@ -492,7 +502,7 @@ def calcula_limites_ejes(lta):
             vel=60*60
         while True:
             resp = pc.sendGCode("G28 {0}".format(straxis[a]))
-            pc.sendGCode("G1 X10 Y10 Z10 F100")
+            pc.sendGCode("G1 X10 Y10 Z10 F300")
             resp = pc.sendGCode('M400')
             resp = pc.sendGCode('G1 {0}{1} F{2}'.format(straxis[a], origen[a], vel))
             resp = pc.sendGCode('M400')

@@ -28,6 +28,14 @@ De este modo, la aplicación esta hecha muy deprisa y bastante mal pensada, ause
 
 ---
 ## Instalación
+Funciona sin problemas en Linux y en Windows.
+En MAC no lo se. No dispongo de Mac para probar.
+
+### Necesario para instalar la aplicación
+- interprete de python 2. Laa última versión a ser posible. Yo utilizo Anaconda https://store.continuum.io/cshop/anaconda/
+- librería *numpy*. Incluido en Anaconda y en otras distribuciones. Si no, hay que instalarlo. 
+- librería *pyserial*. La puedes encontrar en sourceforge, o en el instalador de tu distribución. 
+- librería Tix. Para parte del interfaz gráfico. Instalarla con la distribución.
 
 ### Para ejecutar la versión Python
 Tener instalado un interprete de python 2.7

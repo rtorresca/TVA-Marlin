@@ -760,8 +760,8 @@ class GUI:
 
         Label(self.frameTabla, text='Eje').grid(row=1, column=1)
         Label(self.frameTabla, text='Test').grid(row=1, column=0)
-        Label(self.frameTabla, text='VelMin\nmm/min').grid(row=1, column=2)
-        Label(self.frameTabla, text='VlMax\nmm/min').grid(row=1, column=3)
+        Label(self.frameTabla, text='VelMin\nmm/s').grid(row=1, column=2)
+        Label(self.frameTabla, text='VelMax\nmm/s').grid(row=1, column=3)
         Label(self.frameTabla, text='NtestVel').grid(row=1, column=4)
         Label(self.frameTabla, text='Acel.Min\nmm/s^2').grid(row=1, column=5)
         Label(self.frameTabla, text='Acel.Max\nmm/s^2').grid(row=1, column=6)

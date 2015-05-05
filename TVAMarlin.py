@@ -51,8 +51,8 @@ SEND:G28 X
 """
 
 Ver_major = 1
-Ver_minor = 4
-Ver_rel = 1
+Ver_minor = 5
+Ver_rel = 3
 
 import os
 import time

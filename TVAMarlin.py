@@ -350,10 +350,10 @@ def CheckTestCase(pc, tc):
         # Aceleración a probar
         if testZ:
             pc.sendGCode("M201 Z{0}".format(tc.accel))
-            #pc.sendGCode("M202 Z{0}".format(tc.accel))
+            pc.sendGCode("M204 P{0} T{0}".format(tc.accel))
         else:
             pc.sendGCode("M201 X{0} Y{1}".format(tc.accel, tc.accel))
-            #pc.sendGCode("M202 X{0} Y{1}".format(tc.accel, tc.accel))
+            pc.sendGCode("M204 P{0} P{0}".format(tc.accel))
 
 
         pc.sendGCode("M400")
@@ -367,8 +367,10 @@ def CheckTestCase(pc, tc):
         # Aceleración de retorno
         if testZ:
             pc.sendGCode("M201 Z{0}".format(100))
+            pc.sendGCode("M204 P{0} T{0}".format(100))
         else:
             pc.sendGCode("M201 X{0} Y{1}".format(100.0, 100.0))
+            pc.sendGCode("M204 P{0} T{0}".format(100))
         if testZ:
             pc.sendGCode("G1 {0}{2} F{1}".format(straxis[tc.axis], round(velretorno[1]*60, 1),
                                                  erroradm))

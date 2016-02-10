@@ -32,7 +32,7 @@ Funciona sin problemas en Linux y en Windows.
 En MAC no lo se. No dispongo de Mac para probar.
 
 ### Necesario para instalar la aplicación
-- interprete de python 2. Laa última versión a ser posible. Yo utilizo Anaconda https://store.continuum.io/cshop/anaconda/
+- interprete de python 2. Importante: asegúrate de que usas el interprete de Python 2. Laa última versión a ser posible. Yo utilizo Anaconda https://store.continuum.io/cshop/anaconda/
 - librería *numpy*. Incluido en Anaconda y en otras distribuciones. Si no, hay que instalarlo. 
 - librería *pyserial*. La puedes encontrar en sourceforge, o en el instalador de tu distribución. 
 - librería Tix. Para parte del interfaz gráfico. Instalarla con la distribución.
@@ -87,6 +87,10 @@ Yo no utilizo los límites indicados por TVA. Los reduzco a un 50% o a un 75% y 
 **Nota importante**
 
 Cuando acabes de hacer la calibración / pruebas de los ejes, no olvides resetear la tarjeta de control (Arduino Mega) pues TVA ha cambiado los límites de trabajo y puede haber puesto al firmware en algun modo no deseado para imprimir.
+
+**Nota más importante**
+Al probar un eje que tenga dos motores, como es el caso del eje Z en las prusas i2 e i3. La perdida de pasos se puede producir en uno de los motores antes que en el otro, de modo que, en el caso de las prusas, el eje X *dejará* de ser paralelo a la plataforma de la pieza.
+Será necesario hace de nuevo un ajuste de la inclinación y de la altura del eje Z y, en su caso, volver a nivelar la plataforma.
 
 ## TO-DO
 - [ ] Ejecutable .exe para windows. En linux no debería de haber problema. Retrasado hasta encontrar una forma de hacerlo.
